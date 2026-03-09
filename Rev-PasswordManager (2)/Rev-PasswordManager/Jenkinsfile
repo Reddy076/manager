@@ -112,25 +112,27 @@ pipeline {
 
         stage('Deploy To EC2') {
             when {
-                allOf {
-                    expression { return env.GIT_BRANCH?.endsWith('main') }
-                    expression { return env.ASG_NAME?.trim() }
-                }
+                expression { return env.GIT_BRANCH?.endsWith('main') && env.AWS_ACCOUNT_ID?.trim() }
             }
             steps {
                 script {
+                    def instanceId = 'i-08800fb73214ce6ce'
                     runCommand(
                         """
-                        aws autoscaling start-instance-refresh \
-                          --region ${AWS_REGION} \
-                          --auto-scaling-group-name ${ASG_NAME} \
-                          --preferences '{"MinHealthyPercentage":50,"InstanceWarmup":180}'
-                        """.trim(),
-                        """
-                        aws autoscaling start-instance-refresh `
-                          --region ${AWS_REGION} `
-                          --auto-scaling-group-name ${ASG_NAME} `
-                          --preferences "{""MinHealthyPercentage"":50,""InstanceWarmup"":180}"
+                        aws ssm send-command \\
+                          --region ${AWS_REGION} \\
+                          --instance-ids ${instanceId} \\
+                          --document-name "AWS-RunShellScript" \\
+                          --parameters 'commands=[
+                            "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}",
+                            "docker pull ${ECR_REGISTRY}/${ECR_BACKEND_REPOSITORY}:latest",
+                            "docker pull ${ECR_REGISTRY}/${ECR_FRONTEND_REPOSITORY}:latest",
+                            "docker stop backend frontend 2>/dev/null || true",
+                            "docker rm backend frontend 2>/dev/null || true",
+                            "docker run -d --name backend -p 8082:8082 --restart unless-stopped ${ECR_REGISTRY}/${ECR_BACKEND_REPOSITORY}:latest",
+                            "docker run -d --name frontend -p 80:80 --restart unless-stopped ${ECR_REGISTRY}/${ECR_FRONTEND_REPOSITORY}:latest"
+                          ]' \\
+                          --output text
                         """.trim()
                     )
                 }
