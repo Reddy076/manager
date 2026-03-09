@@ -1,8 +1,10 @@
 :host {
   display: block;
+  height: 100vh;
   min-height: 100vh;
   color: var(--text-main);
   overflow-x: hidden;
+  overflow-y: auto;
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
 
   /* Dot grid lives here — always visible, behind everything */

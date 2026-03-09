@@ -2,8 +2,18 @@
 set -euxo pipefail
 
 dnf update -y
-dnf install -y docker docker-compose-plugin jq awscli
+dnf install -y docker jq awscli
 systemctl enable --now docker
+
+# Wait for docker to be ready
+while ! docker info >/dev/null 2>&1; do sleep 1; done
+
+# Manually install Docker Compose v2 (reliable for AL2023)
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -SL https://github.com/docker/compose/releases/download/v2.33.1/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+# Also link for standalone use
+ln -sf /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
 
 mkdir -p /opt/password-manager
 
@@ -45,6 +55,10 @@ EOF
 
 aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin ${ecr_registry}
 
+echo "Starting Docker Compose deployment..."
 cd /opt/password-manager
-docker compose pull
-docker compose up -d
+/usr/local/bin/docker-compose pull
+/usr/local/bin/docker-compose up -d
+
+echo "Startup script completed successfully. Current containers:"
+docker ps
