@@ -937,30 +937,290 @@ body.dark-theme .stats-strip {
   }
 }
 
-/* Responsive — Responsive Block */
-@media (max-width: 768px) {
+/* ── Tablet (≤ 1024px) ─────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+  }
 
   .hero-title {
-    font-size: 2.5rem;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .steps-row {
+    gap: 0;
+  }
+
+  .step-connector {
+    width: 50px;
+  }
+
+  .glass-mockup {
+    transform: none;
+  }
+}
+
+/* ── Mobile (≤ 768px) ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Navbar */
+  .navbar {
+    padding: 1rem 0;
+  }
+
+  .nav-actions {
+    gap: 0.75rem;
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1.1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 3rem 0 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.25rem;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
   }
 
   .hero-actions {
     flex-direction: column;
     width: 100%;
-    max-width: 300px;
+    max-width: 320px;
   }
 
-  .btn {
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Hide heavy 3D mockup on mobile */
+  .app-preview {
+    display: none;
+  }
+
+  /* Stats Bar */
+  .stats-strip {
+    border-radius: 1.25rem;
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .stat-item {
+    padding: 0.4rem 0.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    white-space: normal;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  /* Features */
+  .features {
+    padding: 4rem 0;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .feature-card {
+    padding: 1.75rem 1.5rem;
+  }
+
+  .section-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .section-header p {
+    font-size: 1rem;
+  }
+
+  /* How It Works — stack steps vertically */
+  .how-it-works {
+    padding: 4rem 0;
+  }
+
+  .steps-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .step-item {
+    max-width: 100%;
+    padding: 0 1rem;
     width: 100%;
   }
 
-  .app-preview {
-    display: none;
-    /* Hide complex mockup on mobile */
+  /* Replace horizontal connector with a vertical line */
+  .step-connector {
+    width: 2px;
+    height: 40px;
+    margin-top: 0;
+    background: linear-gradient(180deg, rgba(139,92,246,0.3), rgba(139,92,246,0.6), rgba(139,92,246,0.3));
   }
 
+  .step-connector::after {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: travel-v 2.5s ease-in-out infinite;
+  }
+
+  /* CTA */
+  .cta-section {
+    padding: 3rem 0 4rem;
+  }
+
+  .cta-box {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .cta-box h2 {
+    font-size: 1.75rem;
+  }
+
+  .cta-box p {
+    font-size: 1rem;
+  }
+
+  /* Footer */
   .footer-content {
     flex-direction: column;
     text-align: center;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .footer-brand .logo {
+    justify-content: center;
+  }
+}
+
+/* Vertical connector animation for mobile */
+@keyframes travel-v {
+  0%   { top: 0;               opacity: 0; }
+  10%  {                        opacity: 1; }
+  90%  {                        opacity: 1; }
+  100% { top: calc(100% - 8px); opacity: 0; }
+}
+
+/* ── Small Mobile (≤ 480px) ────────────────────────────────────── */
+@media (max-width: 480px) {
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  /* Navbar — hide "Log in" text, keep "Get Started" button */
+  .nav-link {
+    display: none;
+  }
+
+  .logo-text {
+    font-size: 1.1rem;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 2rem 0 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 1.9rem;
+  }
+
+  .hero-actions {
+    max-width: 100%;
+  }
+
+  .btn-lg {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Stats */
+  .stats-strip {
+    padding: 0.75rem 1rem;
+  }
+
+  .stat-item {
+    padding: 0.35rem 0.5rem;
+    gap: 0.4rem;
+  }
+
+  /* Features */
+  .feature-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  /* Section headers */
+  .section-header h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Steps */
+  .step-item h3 {
+    font-size: 1rem;
+  }
+
+  .step-item p {
+    font-size: 0.875rem;
+  }
+
+  /* CTA */
+  .cta-box h2 {
+    font-size: 1.4rem;
+  }
+
+  .cta-box p {
+    font-size: 0.9375rem;
+  }
+
+  /* Footer */
+  .footer-links {
+    gap: 0.75rem;
+  }
+
+  .footer-links a {
+    font-size: 0.8125rem;
   }
 }
