@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject, ViewEncapsulation, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { VaultEntryRequest } from '../../../core/api/model/vaultEntryRequest';
 import { VaultEntryDetailResponse } from '../../../core/api/model/vaultEntryDetailResponse';
 import { CategoryDTO } from '../../../core/api/model/categoryDTO';
@@ -10,6 +12,12 @@ import { FolderControllerService } from '../../../core/api/api/folderController.
 import { PasswordGeneratorWidgetComponent } from '../password-generator-widget/password-generator-widget.component';
 import { CustomSelectComponent, SelectOption } from '../../../shared/custom-select/custom-select.component';
 import { LucideAngularModule } from 'lucide-angular';
+
+interface CategorizationResult {
+  category: string;
+  tags: string[];
+  confidence: number;
+}
 
 @Component({
   selector: 'app-vault-entry-modal',
@@ -23,6 +31,7 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
   private fb = inject(FormBuilder);
   private categoryService = inject(CategoryControllerService);
   private folderService = inject(FolderControllerService);
+  private http = inject(HttpClient);
   private el = inject(ElementRef);
 
   @Input() entryToEdit: VaultEntryDetailResponse | null = null;
@@ -57,6 +66,7 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
   showGenerator = false;
   showPassword = false;
   activeDropdowns = 0;
+  isCategorizing = false;
 
   /** True while we're waiting for the parent to provide the decrypted entry. */
   isLocked = false;
@@ -179,6 +189,67 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
     if (this.entryToEdit?.id) {
       this.sensitiveUnlockRequested.emit(this.entryToEdit.id);
     }
+  }
+
+  autoCategorize() {
+    const title = this.entryForm.get('title')?.value;
+    const url = this.entryForm.get('websiteUrl')?.value;
+    const username = this.entryForm.get('username')?.value;
+
+    if (!title || title.trim() === '') {
+      return; 
+    }
+
+    this.isCategorizing = true;
+    
+    this.http.post<CategorizationResult>(`${environment.apiBaseUrl}/api/ai/categorize-entry`, {
+      title, url, username
+    }).subscribe({
+      next: (result) => {
+        const aiCategoryStr = result.category;
+        
+        // 1. Search for existing category (case insensitive)
+        const matchingCategory = this.categories.find(c => c.name?.toUpperCase() === aiCategoryStr.toUpperCase());
+        
+        if (matchingCategory) {
+          // If found, select it
+          this.entryForm.patchValue({ categoryId: matchingCategory.id });
+          this.appendAiTagsToNotes(result.tags, result.confidence);
+          this.isCategorizing = false;
+        } else {
+          // 2. If completely missing, create it on-the-fly
+          this.categoryService.createCategory({ name: aiCategoryStr, icon: 'folder' }).subscribe({
+            next: (newCategory) => {
+              this.categories.push(newCategory);
+              this.entryForm.patchValue({ categoryId: newCategory.id });
+              this.appendAiTagsToNotes(result.tags, result.confidence);
+              this.isCategorizing = false;
+            },
+            error: (err) => {
+              console.error('Failed to create missing AI category', err);
+              this.appendAiTagsToNotes(result.tags, result.confidence);
+              this.isCategorizing = false;
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('AI categorization failed', err);
+        this.isCategorizing = false;
+      }
+    });
+  }
+
+  private appendAiTagsToNotes(tags: string[], confidence: number) {
+    if (!tags || tags.length === 0) return;
+    
+    let currentNotes = this.entryForm.get('notes')?.value || '';
+    if (currentNotes.trim() !== '') {
+      currentNotes += '\n\n';
+    }
+    
+    currentNotes += `--- Auto-Categorized ---\nTags: ${tags.join(', ')}\nConfidence: ${Math.round(confidence * 100)}%`;
+    this.entryForm.patchValue({ notes: currentNotes });
   }
 
   onSubmit() {

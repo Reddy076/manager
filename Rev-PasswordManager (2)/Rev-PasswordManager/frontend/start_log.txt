@@ -91,3 +91,4 @@ Page reload sent to client(s).
 Application bundle generation complete. [1.485 seconds]
 
 Page reload sent to client(s).
+Terminate batch job (Y/N)? 

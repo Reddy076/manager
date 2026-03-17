@@ -79,9 +79,22 @@
           <div class="field-row">
             <div class="field">
               <label>Category</label>
-              <app-custom-select formControlName="categoryId" [options]="categoryOptions" placeholder="Select Category"
-                (isOpenChange)="onDropdownOpenChange($event)">
-              </app-custom-select>
+              <div class="category-field-group" style="display: flex; gap: 8px; align-items: stretch;">
+                <div style="flex-grow: 1;">
+                  <app-custom-select formControlName="categoryId" [options]="categoryOptions" placeholder="Select Category"
+                    (isOpenChange)="onDropdownOpenChange($event)">
+                  </app-custom-select>
+                </div>
+                <button type="button" class="btn-secondary" style="padding: 0 12px; display: flex; align-items: center; justify-content: center; gap: 6px;" 
+                        (click)="autoCategorize()" [disabled]="isCategorizing || !entryForm.get('title')?.value">
+                  @if(isCategorizing) {
+                    <lucide-icon name="loader" [size]="16" class="spin"></lucide-icon>
+                  } @else {
+                    <lucide-icon name="sparkles" [size]="16"></lucide-icon>
+                  }
+                  Auto
+                </button>
+              </div>
             </div>
             <div class="field">
               <label>Folder</label>

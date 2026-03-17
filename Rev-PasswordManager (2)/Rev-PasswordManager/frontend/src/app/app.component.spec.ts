@@ -1,11 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { importProvidersFrom } from '@angular/core';
+import { LucideAngularModule, Bot, X, Send, User, Shield, Loader2 } from 'lucide-angular';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, RouterModule.forRoot([])],
+      imports: [AppComponent, RouterModule.forRoot([]), HttpClientTestingModule],
+      providers: [
+        importProvidersFrom(LucideAngularModule.pick({ Bot, X, Send, User, Shield, Loader2 }))
+      ]
     }).compileComponents();
   });
 

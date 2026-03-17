@@ -27,6 +27,7 @@
     "angularx-qrcode": "^18.0.1",
     "lucide-angular": "^0.487.0",
     "ng-recaptcha": "^13.2.1",
+    "ngx-markdown": "^18.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"

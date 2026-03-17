@@ -79,6 +79,10 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'ai/analyze',
+        loadComponent: () => import('./features/ai/password-analyzer/password-analyzer.component').then(m => m.PasswordAnalyzerComponent)
+      },
+      {
         path: 'backup',
         loadChildren: () => import('./features/backup/backup.routes').then(m => m.backupRoutes)
       },

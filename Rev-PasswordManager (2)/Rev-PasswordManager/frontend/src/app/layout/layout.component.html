@@ -84,6 +84,12 @@
         <span class="nav-label">Snapshots</span>
         }
       </a>
+      <a routerLink="/ai/analyze" routerLinkActive="active" class="nav-item" (click)="closeMobileNav()">
+        <span class="nav-icon"><lucide-icon name="shield-check" [size]="20"></lucide-icon></span>
+        @if (!sidebarCollapsed) {
+        <span class="nav-label">AI Analyzer</span>
+        }
+      </a>
     </nav>
 
     <div class="sidebar-spacer"></div>
@@ -115,6 +121,7 @@
     <main class="page-content">
       <router-outlet></router-outlet>
     </main>
+    <app-security-chatbot></app-security-chatbot>
   </div>
 
 </div>
