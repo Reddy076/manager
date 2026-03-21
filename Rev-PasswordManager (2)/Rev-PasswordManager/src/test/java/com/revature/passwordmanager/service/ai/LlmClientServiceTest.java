@@ -35,8 +35,9 @@ class LlmClientServiceTest {
     @BeforeEach
     void setUp() {
         config = new LlmConfig();
-        config.setBaseUrl("http://localhost:11434");
-        config.setModel("phi3");
+        config.setBaseUrl("https://api.groq.com/openai/v1");
+        config.setApiKey("mock-key");
+        config.setModel("llama");
         config.setTemperature(0.7);
 
         objectMapper = new ObjectMapper();
@@ -46,7 +47,7 @@ class LlmClientServiceTest {
     @Test
     void isHealthy_WhenReturns200_ReturnsTrue() throws IOException {
         Response response = new Response.Builder()
-                .request(new Request.Builder().url("http://localhost:11434").build())
+                .request(new Request.Builder().url("https://api.groq.com/openai/v1/models").build())
                 .protocol(Protocol.HTTP_1_1)
                 .code(200)
                 .message("OK")
@@ -69,11 +70,11 @@ class LlmClientServiceTest {
 
     @Test
     void generateCompletion_Success_ReturnsResponseString() throws IOException {
-        String mockOllamaResponse = "{\"model\":\"phi3\",\"response\":\"This is the AI response\"}";
-        ResponseBody responseBody = ResponseBody.create(mockOllamaResponse, MediaType.parse("application/json"));
+        String mockOpenAiResponse = "{\"choices\": [{\"message\": {\"content\": \"This is the AI response\"}}]}";
+        ResponseBody responseBody = ResponseBody.create(mockOpenAiResponse, MediaType.parse("application/json"));
 
         Response response = new Response.Builder()
-                .request(new Request.Builder().url("http://localhost:11434/api/generate").build())
+                .request(new Request.Builder().url("https://api.groq.com/openai/v1/chat/completions").build())
                 .protocol(Protocol.HTTP_1_1)
                 .code(200)
                 .message("OK")
@@ -91,16 +92,17 @@ class LlmClientServiceTest {
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(httpClient).newCall(requestCaptor.capture());
         Request capturedRequest = requestCaptor.getValue();
-        assertEquals("http://localhost:11434/api/generate", capturedRequest.url().toString());
+        assertEquals("https://api.groq.com/openai/v1/chat/completions", capturedRequest.url().toString());
     }
 
     @Test
     void generateCompletion_WhenApiFails_ThrowsException() throws IOException {
         Response response = new Response.Builder()
-                .request(new Request.Builder().url("http://localhost:11434/api/generate").build())
+                .request(new Request.Builder().url("https://api.groq.com/openai/v1/chat/completions").build())
                 .protocol(Protocol.HTTP_1_1)
                 .code(500)
                 .message("Internal Server Error")
+                .body(ResponseBody.create("Server Error", MediaType.parse("text/plain")))
                 .build();
 
         when(httpClient.newCall(any(Request.class))).thenReturn(call);
@@ -110,6 +112,6 @@ class LlmClientServiceTest {
             llmClientService.generateCompletion("System Prompt", "User Prompt");
         });
 
-        assertTrue(exception.getMessage().contains("Failed to generate completion"));
+        assertTrue(exception.getMessage().contains("LLM API returned: 500"));
     }
 }
