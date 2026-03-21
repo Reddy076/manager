@@ -280,3 +280,47 @@
   color: var(--text-main);
   font-size: 0.875rem;
 }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .score-card {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-section {
+    padding: 1rem 0;
+  }
+  
+  .section-header {
+    padding: 0 1rem;
+  }
+
+  .score-card {
+    flex-direction: column;
+    text-align: center;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 1.5rem 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+  
+  .health-section,
+  .recommendations-section {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 1.5rem 1rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+}
