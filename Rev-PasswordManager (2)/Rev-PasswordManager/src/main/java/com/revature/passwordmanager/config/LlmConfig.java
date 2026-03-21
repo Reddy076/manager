@@ -12,10 +12,15 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "llm")
 @Data
 public class LlmConfig {
+    private String provider = "OPENAI";
     private String baseUrl;
     private String model;
     private double temperature = 0.7;
     private int timeoutSeconds = 60;
+    private int maxTokens = 2048;
+    private String apiKey;
+    private boolean streamEnabled = false;
+    private int maxRetries = 3;
 
     @Bean
     public OkHttpClient okHttpClient() {

@@ -1,244 +1,245 @@
-# Rev Password Manager
+# RevVault — AI-Powered Password Manager
 
-Rev Password Manager is a full-stack password manager built with Angular 18, Spring Boot 3, and MySQL 8.
+A full-stack, enterprise-grade password management application with integrated AI security features. Built with Angular 18, Spring Boot 3, and MySQL, with optional deployment via Docker Compose.
 
-## Stack
+---
 
-Backend:
+## ✨ Features
 
-- Java 21
-- Spring Boot 3.2.3
-- Spring Security
-- Spring Data JPA
-- Spring Mail
-- SpringDoc OpenAPI
-- Maven 3.9+
+### 🔐 Core Password Management
+- **Encrypted Vault** — Store passwords, login credentials, secure notes, and file attachments with AES-256-GCM encryption
+- **Categories & Folders** — Organize vault entries with custom categories and nested folders
+- **Favorites & Filters** — Quickly access pinned entries, recently used items, or trashed records
+- **Secure Sharing** — Share vault entries via time-limited, token-protected links
+- **Vault Snapshots** — Import and export your vault with automatic backup snapshots
 
-Frontend:
+### 🤖 AI Security Features (Powered by Groq LLaMA 3.3 70B)
+- **AI Password Analyzer** — Get instant AI-generated security analysis of any password including strength rating, vulnerabilities, and suggestions
+- **AI Auto-Categorize** — Automatically suggest categories and tags for new vault entries based on the website and username
+- **AI Security Assistant** — A globally accessible floating chat widget that is vault-aware and can answer questions like *"Show my weak passwords"* or *"What is my security score?"*
 
-- Angular 18
-- Angular Material
-- TypeScript 5.5
-- Karma + Jasmine
-- Node.js 20.x
-- npm 10.x
+### 🛡️ Security & Authentication
+- JWT-based authentication with access and refresh tokens
+- Two-Factor Authentication (2FA) support
+- Duress password support for coercion scenarios
+- Rate limiting, session management, and audit logging
+- Security alerts and login history tracking
+- Idle session auto-logout
 
-Infrastructure:
+### 📊 Dashboard & Analytics
+- Overall security score (0–100)
+- Password health breakdown by strength category
+- Reused password detection
+- Password age tracking (flags passwords older than 90 days)
+- Security trend history
 
-- Docker
-- Docker Compose
-- Nginx
-- MySQL 8.0
-- Terraform
-- Jenkins
+---
 
-## Pre-Phase 0 baseline
+## 🏗️ Tech Stack
 
-The repository now uses three backend profiles:
-
-- `local`: default profile for manual development.
-- `docker`: used by `docker compose`.
-- `aws`: reserved for cloud deployment.
-
-Reference documents:
-
-- [Runtime and config matrix](plans/pre-phase-0-runtime-config-matrix.md)
-- [Smoke test checklist](plans/pre-phase-0-smoke-test-checklist.md)
-- [P3 development plan](plans/p3-development-plan.md)
-- [P3 todo list](plans/p3-todo-list.md)
-- [Phase 1 next steps runbook](plans/phase-1-next-steps-runbook.md)
-- [Phase 1 AWS deployment config](plans/phase-1-aws-deployment-config.md)
-- [Phase 1 secret rotation checklist](plans/phase-1-secret-rotation-checklist.md)
-- [Phase 1 deployment validation report](plans/phase-1-deployment-validation-report.md)
-- [Phase 1 rollback checklist](plans/phase-1-rollback-checklist.md)
-
-## Prerequisites
-
-| Tool | Version |
+| Layer | Technology |
 |---|---|
-| Java JDK | 21 |
-| Maven | 3.9+ |
-| Node.js | 20.x |
-| npm | 10.x |
-| MySQL | 8.0 |
-| Docker | 24+ |
-| Docker Compose | 2.x |
+| Frontend | Angular 18, TypeScript, Lucide Icons |
+| Backend | Spring Boot 3, Java 21, Spring Security |
+| Database | MySQL 8.0 |
+| AI / LLM | Groq API — `llama-3.3-70b-versatile` |
+| HTTP Client | OkHttp3 (backend AI calls) |
+| Auth | JWT (HS384), BCrypt |
+| Containerization | Docker, Docker Compose |
+| Web Server | Nginx (production frontend) |
+| Build Tools | Maven 3.9, Node.js 20, Angular CLI |
 
-## Local setup
+---
 
-1. Copy the environment template.
+## 🚀 Getting Started
 
-```bash
-copy .env.example .env
-```
+### Prerequisites
 
-2. Edit `.env` with your local database, JWT, and SMTP values.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for containerized deployment)
+- **OR** for local development:
+  - Java 21 (JDK)
+  - Maven 3.9+
+  - Node.js 20+ and npm
+  - MySQL 8.0
 
-3. Create the database.
-
-```sql
-CREATE DATABASE rev_password_manager;
-CREATE USER 'appuser'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON rev_password_manager.* TO 'appuser'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-4. Start the backend from the project root.
+### 1. Clone the Repository
 
 ```bash
+git clone <your-repo-url>
+cd Rev-PasswordManager
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the project root (next to `docker-compose.yml`):
+
+```env
+# Database
+MYSQL_ROOT_PASSWORD=your-secure-root-password
+MYSQL_DATABASE=rev_password_manager
+MYSQL_USER=appuser
+MYSQL_PASSWORD=your-secure-app-password
+
+# JWT — use a long random secret in production
+JWT_SECRET=your-very-long-random-jwt-secret
+
+# Email (optional — for registration verification and password reset)
+SPRING_MAIL_HOST=smtp.gmail.com
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=your@gmail.com
+SPRING_MAIL_PASSWORD=your-app-password
+
+# AI — Groq API Key (free at https://console.groq.com)
+LLM_API_KEY=gsk_your_groq_api_key_here
+```
+
+---
+
+## 🐳 Deployment with Docker Compose
+
+The easiest way to run the full stack:
+
+```bash
+docker compose up -d --build
+```
+
+This spins up three containers:
+
+| Container | Service | Port |
+|---|---|---|
+| `password-manager-mysql` | MySQL 8.0 database | `3307` (host) |
+| `password-manager-backend` | Spring Boot API | `8082` (host → `8080` internal) |
+| `password-manager-frontend` | Angular app via Nginx | `80` (host) |
+
+Open **http://localhost** in your browser.
+
+To stop:
+```bash
+docker compose down
+```
+
+To stop and wipe all data volumes:
+```bash
+docker compose down -v
+```
+
+---
+
+## 💻 Local Development
+
+### Backend (Spring Boot)
+
+```bash
+# From the project root
 mvn spring-boot:run
 ```
 
-5. Start the frontend.
+The API server will start at **http://localhost:8080**.
+
+> **Note:** Ensure the MySQL container is running first:
+> ```bash
+> docker start password-manager-mysql
+> ```
+
+The local profile reads from `src/main/resources/application-local.properties`. The MySQL port defaults to `3307` to match the Docker mapping.
+
+### Frontend (Angular)
 
 ```bash
 cd frontend
-npm install
-npm start
+npm install --legacy-peer-deps
+npm run start
 ```
 
-URLs:
+The dev server starts at **http://localhost:4200** with hot-reload.
 
-- Frontend: `http://localhost:4200`
-- Backend API: `http://localhost:8080/api`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
+---
 
-Notes:
+## 🤖 AI Configuration
 
-- The backend defaults to the `local` profile.
-- Spring Boot imports the project-root `.env` file automatically.
-- The frontend development server targets the backend on `http://localhost:8080`.
+The AI features use [Groq](https://console.groq.com) for fast, free LLM inference.
 
-## Docker setup
+Get a free API key at **https://console.groq.com** and set it in `application.properties`:
 
-1. Copy the template.
-
-```bash
-copy .env.example .env
+```properties
+llm.provider=OPENAI
+llm.base-url=https://api.groq.com/openai/v1
+llm.api-key=gsk_your_groq_api_key
+llm.model=llama-3.3-70b-versatile
+llm.temperature=0.7
+llm.max-tokens=2048
 ```
 
-2. Update any values you do not want to use from the local-safe defaults.
+### AI Endpoints
 
-3. Start the stack.
+| Endpoint | Description |
+|---|---|
+| `POST /api/ai/analyze-password` | Password strength analysis |
+| `POST /api/ai/categorize-entry` | Auto-categorize a vault entry |
+| `POST /api/ai/chat` | AI security assistant (vault-aware) |
+| `GET /api/ai/health` | Check LLM service connectivity |
 
-```bash
-docker compose up --build
+---
+
+## 📁 Project Structure
+
 ```
-
-URLs:
-
-- Frontend: `http://localhost`
-- Backend API: `http://localhost:8082/api`
-- Swagger UI: `http://localhost:8082/swagger-ui.html`
-
-Notes:
-
-- Compose sets `SPRING_PROFILES_ACTIVE=docker`.
-- MySQL, backend logs, and secure files are stored in named Docker volumes.
-- Backend health is available at `http://localhost:8082/actuator/health`.
-- Frontend health is available at `http://localhost/healthz`.
-
-## Phase 1 deployment assets
-
-Phase 1 infrastructure and delivery scaffolding now lives in:
-
-- `infra/aws/` for Terraform-based AWS infrastructure.
-- `deploy/aws/` for the EC2 runtime Docker Compose reference.
-- `Jenkinsfile` for build, test, SonarQube, ECR push, and ASG refresh automation.
-
-Suggested Phase 1 execution order:
-
-1. Copy `infra/aws/terraform.tfvars.example` to a local tfvars file and replace placeholders.
-2. Run `terraform init`, `terraform plan`, and `terraform apply` from `infra/aws`.
-3. Configure the Jenkins environment variables listed in `plans/phase-1-aws-deployment-config.md`.
-4. Push to `main` after Jenkins is connected to ECR and the Auto Scaling Group.
-
-## Environment variables
-
-`.env.example` is the only tracked template. Keep `.env` local-only.
-
-Key variables:
-
-```env
-SPRING_PROFILES_ACTIVE=local
-
-MYSQL_DATABASE=rev_password_manager
-MYSQL_ROOT_PASSWORD=changeit-root-password
-MYSQL_USER=appuser
-MYSQL_PASSWORD=changeit-app-password
-
-SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/rev_password_manager?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-SPRING_DATASOURCE_USERNAME=appuser
-SPRING_DATASOURCE_PASSWORD=changeit-app-password
-
-JWT_SECRET=replace_with_at_least_32_characters_before_sharing
-JWT_ACCESS_TOKEN_EXPIRATION=900000
-JWT_REFRESH_TOKEN_EXPIRATION=604800000
-
-SPRING_MAIL_HOST=localhost
-SPRING_MAIL_PORT=1025
-SPRING_MAIL_USERNAME=
-SPRING_MAIL_PASSWORD=
-
-AI_OPENAI_API_KEY=
-CORS_ALLOWED_ORIGINS=http://localhost,http://localhost:4200,http://localhost:8080
-```
-
-SMTP note:
-
-- For local development, use a fake SMTP server such as MailHog unless you intentionally want to send real email.
-
-## Tests
-
-Backend:
-
-```bash
-mvn test
-mvn verify
-```
-
-Frontend:
-
-```bash
-cd frontend
-npm test -- --watch=false --browsers=ChromeHeadless
-```
-
-## Major API groups
-
-- `/api/auth/**`
-- `/api/users/**`
-- `/api/settings/**`
-- `/api/2fa/**`
-- `/api/sessions/**`
-- `/api/vault/**`
-- `/api/categories/**`
-- `/api/folders/**`
-- `/api/backup/**`
-- `/api/dashboard/**`
-- `/api/security/**`
-- `/api/notifications/**`
-- `/api/shares/**`
-
-## Project structure
-
-```text
 Rev-PasswordManager/
-|-- frontend/
-|-- plans/
-|-- src/
-|   |-- main/
-|   |   |-- java/
-|   |   `-- resources/
-|   `-- test/
-|-- .env.example
-|-- docker-compose.yml
-|-- Dockerfile
-`-- pom.xml
+├── src/main/java/com/revature/passwordmanager/
+│   ├── controller/          # REST API controllers
+│   ├── service/             # Business logic
+│   │   └── ai/              # AI services (chat, analysis, categorization)
+│   ├── config/              # Spring configuration (LLM, CORS, Security)
+│   ├── dto/                 # Request/Response DTOs
+│   ├── entity/              # JPA entities
+│   └── security/            # JWT filters, guards
+├── src/main/resources/
+│   ├── application.properties         # Shared config
+│   └── application-local.properties   # Local dev overrides
+├── frontend/
+│   ├── src/app/
+│   │   ├── core/            # Guards, interceptors, API services
+│   │   ├── features/        # Page components (vault, dashboard, ai, auth)
+│   │   ├── shared/          # Reusable components (chatbot-widget, top-header)
+│   │   └── layout/          # Shell layout with sidebar navigation
+│   ├── Dockerfile
+│   └── nginx.conf
+├── Dockerfile               # Backend Docker image
+└── docker-compose.yml       # Full stack orchestration
 ```
 
-## Security and repository hygiene
+---
 
-- Real secrets must not be committed to tracked source files.
-- `.env`, logs, build output, Sonar output, coverage output, and `node_modules` are treated as generated/local artifacts.
-- If sensitive values were committed previously, rotate them outside the repository. Phase 0 cleanup only removes them from the current tracked baseline; it does not rewrite repository history.
+## 🔑 Default Credentials
+
+> ⚠️ Change all default passwords before deploying to any public environment.
+
+| Setting | Default Value |
+|---|---|
+| MySQL root password | `changeit-root-password` |
+| MySQL app password | `changeit-app-password` |
+| JWT secret | `local-dev-jwt-secret-change-me` |
+
+---
+
+## 📋 API Documentation
+
+Swagger UI is available in local/dev mode at:
+
+**http://localhost:8080/swagger-ui.html**
+
+---
+
+## 🧪 Health Checks
+
+| Endpoint | Description |
+|---|---|
+| `GET /actuator/health` | Spring Boot health (DB, disk, liveness) |
+| `GET /actuator/metrics` | Application metrics |
+| `GET /api/ai/health` | Groq LLM connectivity check |
+
+---
+
+## 📜 License
+
+This project was developed as part of the **Revature P3 Project** program.

@@ -135,7 +135,7 @@
           </p>
           @if (entry.daysRemaining !== undefined) {
           <p class="trash-expiry" [class.expiry-soon]="(entry.daysRemaining || 0) <= 3">
-            Deleted {{ entry.daysRemaining }}d ago · expires in {{ 30 - (entry.daysRemaining || 0) }}d
+            Deleted {{ 30 - (entry.daysRemaining || 0) }}d ago · expires in {{ entry.daysRemaining }}d
           </p>
           }
         </div>

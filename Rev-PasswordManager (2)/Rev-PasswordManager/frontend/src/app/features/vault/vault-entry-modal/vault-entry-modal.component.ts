@@ -2,7 +2,6 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import { VaultEntryRequest } from '../../../core/api/model/vaultEntryRequest';
 import { VaultEntryDetailResponse } from '../../../core/api/model/vaultEntryDetailResponse';
 import { CategoryDTO } from '../../../core/api/model/categoryDTO';
@@ -12,12 +11,7 @@ import { FolderControllerService } from '../../../core/api/api/folderController.
 import { PasswordGeneratorWidgetComponent } from '../password-generator-widget/password-generator-widget.component';
 import { CustomSelectComponent, SelectOption } from '../../../shared/custom-select/custom-select.component';
 import { LucideAngularModule } from 'lucide-angular';
-
-interface CategorizationResult {
-  category: string;
-  tags: string[];
-  confidence: number;
-}
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-vault-entry-modal',
@@ -31,8 +25,8 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
   private fb = inject(FormBuilder);
   private categoryService = inject(CategoryControllerService);
   private folderService = inject(FolderControllerService);
-  private http = inject(HttpClient);
   private el = inject(ElementRef);
+  private http = inject(HttpClient);
 
   @Input() entryToEdit: VaultEntryDetailResponse | null = null;
 
@@ -82,6 +76,68 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
   onDropdownOpenChange(isOpen: boolean) {
     this.activeDropdowns += isOpen ? 1 : -1;
     if (this.activeDropdowns < 0) this.activeDropdowns = 0;
+  }
+
+  aiCategorize() {
+    const title = this.entryForm.get('title')?.value;
+    const url = this.entryForm.get('websiteUrl')?.value;
+    const username = this.entryForm.get('username')?.value;
+
+    if (!title) {
+      return;
+    }
+
+    this.isCategorizing = true;
+    // Backend returns { category: string, tags: string[], confidence: number }
+    this.http.post<{ category: string; tags: string[]; confidence: number }>(`${environment.apiBaseUrl}/api/ai/categorize-entry`, {
+      title,
+      url: url || null,
+      username: username || null
+    }).subscribe({
+      next: (result) => {
+        // Backend returns uppercase enum e.g. "SOCIAL", "WORK", "FINANCE"
+        const aiCategory = result.category?.trim();
+        if (!aiCategory) {
+          this.isCategorizing = false;
+          return;
+        }
+
+        // 1. Try exact case-insensitive match
+        let matched = this.categories.find(
+          c => c.name?.toLowerCase() === aiCategory.toLowerCase()
+        );
+
+        // 2. Try partial match — user's category contains the AI keyword or vice versa
+        if (!matched) {
+          matched = this.categories.find(c =>
+            c.name?.toLowerCase().includes(aiCategory.toLowerCase()) ||
+            aiCategory.toLowerCase().includes(c.name?.toLowerCase() ?? '')
+          );
+        }
+
+        if (matched) {
+          // Found an existing category — select it
+          this.entryForm.patchValue({ categoryId: matched.id });
+          this.isCategorizing = false;
+        } else {
+          // No match — create a new category with a user-friendly name (Title Case)
+          const friendlyName = aiCategory.charAt(0).toUpperCase() + aiCategory.slice(1).toLowerCase();
+          this.categoryService.createCategory({ name: friendlyName }).subscribe({
+            next: (newCategory) => {
+              this.categories = [...this.categories, newCategory];
+              this.entryForm.patchValue({ categoryId: newCategory.id });
+              this.isCategorizing = false;
+            },
+            error: () => {
+              this.isCategorizing = false;
+            }
+          });
+        }
+      },
+      error: () => {
+        this.isCategorizing = false;
+      }
+    });
   }
 
   ngOnInit() {
@@ -142,16 +198,50 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
     });
   }
 
+  private readonly DEFAULT_FOLDERS = ['Work', 'Personal', 'Finance', 'Social', 'Shopping'];
+
   private loadFolders() {
     this.isLoadingFolders = true;
     this.folderService.getFolders().subscribe({
       next: (data: FolderDTO[]) => {
-        this.folders = data;
-        this.isLoadingFolders = false;
+        if (data && data.length > 0) {
+          this.folders = data;
+          this.isLoadingFolders = false;
+        } else {
+          // No folders yet — seed defaults and reload
+          this.seedDefaultFolders();
+        }
       },
       error: () => {
         this.isLoadingFolders = false;
       }
+    });
+  }
+
+  private seedDefaultFolders() {
+    const creates = this.DEFAULT_FOLDERS.map(name =>
+      this.folderService.createFolder(name)
+    );
+    // Create all in parallel then reload
+    let done = 0;
+    const created: FolderDTO[] = [];
+    creates.forEach(obs => {
+      obs.subscribe({
+        next: (f) => {
+          created.push(f);
+          done++;
+          if (done === creates.length) {
+            this.folders = created;
+            this.isLoadingFolders = false;
+          }
+        },
+        error: () => {
+          done++;
+          if (done === creates.length) {
+            this.isLoadingFolders = false;
+          }
+        }
+      });
     });
   }
 
@@ -189,67 +279,6 @@ export class VaultEntryModalComponent implements OnInit, OnChanges {
     if (this.entryToEdit?.id) {
       this.sensitiveUnlockRequested.emit(this.entryToEdit.id);
     }
-  }
-
-  autoCategorize() {
-    const title = this.entryForm.get('title')?.value;
-    const url = this.entryForm.get('websiteUrl')?.value;
-    const username = this.entryForm.get('username')?.value;
-
-    if (!title || title.trim() === '') {
-      return; 
-    }
-
-    this.isCategorizing = true;
-    
-    this.http.post<CategorizationResult>(`${environment.apiBaseUrl}/api/ai/categorize-entry`, {
-      title, url, username
-    }).subscribe({
-      next: (result) => {
-        const aiCategoryStr = result.category;
-        
-        // 1. Search for existing category (case insensitive)
-        const matchingCategory = this.categories.find(c => c.name?.toUpperCase() === aiCategoryStr.toUpperCase());
-        
-        if (matchingCategory) {
-          // If found, select it
-          this.entryForm.patchValue({ categoryId: matchingCategory.id });
-          this.appendAiTagsToNotes(result.tags, result.confidence);
-          this.isCategorizing = false;
-        } else {
-          // 2. If completely missing, create it on-the-fly
-          this.categoryService.createCategory({ name: aiCategoryStr, icon: 'folder' }).subscribe({
-            next: (newCategory) => {
-              this.categories.push(newCategory);
-              this.entryForm.patchValue({ categoryId: newCategory.id });
-              this.appendAiTagsToNotes(result.tags, result.confidence);
-              this.isCategorizing = false;
-            },
-            error: (err) => {
-              console.error('Failed to create missing AI category', err);
-              this.appendAiTagsToNotes(result.tags, result.confidence);
-              this.isCategorizing = false;
-            }
-          });
-        }
-      },
-      error: (err) => {
-        console.error('AI categorization failed', err);
-        this.isCategorizing = false;
-      }
-    });
-  }
-
-  private appendAiTagsToNotes(tags: string[], confidence: number) {
-    if (!tags || tags.length === 0) return;
-    
-    let currentNotes = this.entryForm.get('notes')?.value || '';
-    if (currentNotes.trim() !== '') {
-      currentNotes += '\n\n';
-    }
-    
-    currentNotes += `--- Auto-Categorized ---\nTags: ${tags.join(', ')}\nConfidence: ${Math.round(confidence * 100)}%`;
-    this.entryForm.patchValue({ notes: currentNotes });
   }
 
   onSubmit() {

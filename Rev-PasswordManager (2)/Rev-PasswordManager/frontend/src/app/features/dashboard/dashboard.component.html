@@ -276,9 +276,14 @@
       <div class="detail-card-header">
         <lucide-icon name="activity" [size]="18"></lucide-icon>
         <h3>Security Score Trend</h3>
-        <span class="detail-badge trend-badge" [style.color]="trendColor">
-          <lucide-icon [name]="trendIcon" [size]="14"></lucide-icon>
-          {{ trendsData.scoreChange > 0 ? '+' : '' }}{{ trendsData.scoreChange }} pts ({{ trendsData.periodLabel }})
+        <span class="detail-badge trend-badge" [style.color]="trendPolylinePoints ? trendColor : '#6B7280'">
+          @if (trendPolylinePoints) {
+            <lucide-icon [name]="trendIcon" [size]="14"></lucide-icon>
+            {{ trendsData.scoreChange > 0 ? '+' : '' }}{{ trendsData.scoreChange }} pts ({{ trendsData.periodLabel }})
+          } @else {
+            <lucide-icon name="loader" [size]="14" class="spin-icon"></lucide-icon>
+            Analyzing...
+          }
         </span>
       </div>
       @if (trendPolylinePoints) {

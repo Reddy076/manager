@@ -76,32 +76,24 @@
             <label>Website URL</label>
             <input type="url" formControlName="websiteUrl" placeholder="https://example.com">
           </div>
-          <div class="field-row">
-            <div class="field">
+          <div class="field">
+            <div class="category-label-row">
               <label>Category</label>
-              <div class="category-field-group" style="display: flex; gap: 8px; align-items: stretch;">
-                <div style="flex-grow: 1;">
-                  <app-custom-select formControlName="categoryId" [options]="categoryOptions" placeholder="Select Category"
-                    (isOpenChange)="onDropdownOpenChange($event)">
-                  </app-custom-select>
-                </div>
-                <button type="button" class="btn-secondary" style="padding: 0 12px; display: flex; align-items: center; justify-content: center; gap: 6px;" 
-                        (click)="autoCategorize()" [disabled]="isCategorizing || !entryForm.get('title')?.value">
-                  @if(isCategorizing) {
-                    <lucide-icon name="loader" [size]="16" class="spin"></lucide-icon>
-                  } @else {
-                    <lucide-icon name="sparkles" [size]="16"></lucide-icon>
-                  }
-                  Auto
-                </button>
-              </div>
+              <button type="button" class="btn-ai-categorize-inline" (click)="aiCategorize()"
+                [disabled]="isCategorizing || !entryForm.get('title')?.value">
+                <lucide-icon name="sparkles" [size]="12"></lucide-icon>
+                {{ isCategorizing ? 'Analyzing...' : 'Auto-Categorize' }}
+              </button>
             </div>
-            <div class="field">
-              <label>Folder</label>
-              <app-custom-select formControlName="folderId" [options]="folderOptions" placeholder="No Folder"
-                (isOpenChange)="onDropdownOpenChange($event)">
-              </app-custom-select>
-            </div>
+            <app-custom-select formControlName="categoryId" [options]="categoryOptions" placeholder="Select Category"
+              (isOpenChange)="onDropdownOpenChange($event)">
+            </app-custom-select>
+          </div>
+          <div class="field">
+            <label>Folder</label>
+            <app-custom-select formControlName="folderId" [options]="folderOptions" placeholder="No Folder"
+              (isOpenChange)="onDropdownOpenChange($event)">
+            </app-custom-select>
           </div>
         </div>
       </div>

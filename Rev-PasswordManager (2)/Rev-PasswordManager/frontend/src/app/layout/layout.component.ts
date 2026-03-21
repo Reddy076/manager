@@ -7,14 +7,14 @@ import { TopHeaderComponent } from './top-header/top-header.component';
 import { CategoryControllerService } from '../core/api/api/categoryController.service';
 import { CategoryDTO } from '../core/api/model/categoryDTO';
 import { LucideAngularModule } from 'lucide-angular';
-import { SecurityChatbotComponent } from '../shared/security-chatbot/security-chatbot.component';
+import { ChatbotWidgetComponent } from '../shared/chatbot-widget/chatbot-widget.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive, CommonModule, NgIf, TopHeaderComponent,
-    LucideAngularModule, SecurityChatbotComponent
+    LucideAngularModule, ChatbotWidgetComponent
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
